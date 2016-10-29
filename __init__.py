@@ -1,7 +1,35 @@
 import cv2 
 
+TAG_FLOAT = 202021.25 # check for this when READING a flo file
+
+def readFlo(path): 
+	from ctypes import sizeof, c_int, c_float, c_double
+	import numpy as np 
+	sz_int = sizeof(c_int)
+	sz_float = sizeof(c_float)
+	sz_double = sizeof(c_double)
+
+	import struct 
+	#Read binary .flo file, saved using flowIO::WriteFlowFile()
+	fo = open(path, 'rw+')
+	tag = struct.unpack('f', fo.read(sz_float))[0]
+	matWidth = struct.unpack('i', fo.read(sz_int))[0]
+	matHeight = struct.unpack('i', fo.read(sz_int))[0]
+			
+	nbands = 2
+	flo = np.zeros((matWidth, matHeight, 2), dtype = np.float32)
+	print "Reading flo image"
+	n = nbands*matWidth
+	for i in range(matHeight):
+		val = np.array(struct.unpack('f'*n, fo.read(sz_float*n)))
+		flo[:,i,:] = val.reshape((matWidth, 2))
+
+	fo.close()
+	return flo
+
 def readFileToMat(path): 
 	from ctypes import sizeof, c_int, c_float, c_double
+	import numpy as np 
 	sz_int = sizeof(c_int)
 	sz_float = sizeof(c_float)
 	sz_double = sizeof(c_double)
