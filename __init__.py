@@ -1,7 +1,8 @@
 import cv2 
 
 TAG_FLOAT = 202021.25 # check for this when READING a flo file
-
+#Information on '.flo' format: http://vision.middlebury.edu/flow/submit/
+#Also implemented in C++ opencv: http://docs.opencv.org/3.0-beta/modules/optflow/doc/optflow_io.html
 def readFlo(path): 
 	from ctypes import sizeof, c_int, c_float, c_double
 	import numpy as np 
@@ -13,16 +14,24 @@ def readFlo(path):
 	#Read binary .flo file, saved using flowIO::WriteFlowFile()
 	fo = open(path, 'rw+')
 	tag = struct.unpack('f', fo.read(sz_float))[0]
+	if tag != TAG_FLOAT:
+		print("TAG_FLOAT (202021.25) doesn't match file. Is this a .flo file?")
+		return None
 	matWidth = struct.unpack('i', fo.read(sz_int))[0]
 	matHeight = struct.unpack('i', fo.read(sz_int))[0]
 			
 	nbands = 2
 	flo = np.zeros((matWidth, matHeight, 2), dtype = np.float32)
-	print "Reading flo image"
+	print("Reading flo image")
 	n = nbands*matWidth
 	for i in range(matHeight):
 		val = np.array(struct.unpack('f'*n, fo.read(sz_float*n)))
 		flo[:,i,:] = val.reshape((matWidth, 2))
+
+	#Check for EOF
+	a = fo.read()
+	if a != '':
+		print("File longer than expected. Check format")
 
 	fo.close()
 	return flo
@@ -44,7 +53,7 @@ def readFileToMat(path):
 	#FLOAT ONE CHANNEL
 	if arrayType == cv2.CV_32F:
 		mat = np.zeros((matHeight, matWidth), dtype = np.float32)
-		print "Reading CV_32F image"
+		print("Reading CV_32F image")
 		for i in range(matHeight):
 			for j in range(matWidth):
 				val = struct.unpack('f', fo.read(sz_int))[0]
@@ -54,7 +63,7 @@ def readFileToMat(path):
 	#DOUBLE ONE CHANNEL
 	elif arrayType == cv2.CV_64F:
 		mat = np.zeros((matHeight, matWidth), dtype = np.float64)
-		print "Reading CV_64F image"
+		print("Reading CV_64F image")
 		for i in range(matHeight):
 			for j in range(matWidth):
 				val = struct.unpack('d', fo.read(sz_double))[0]
@@ -62,7 +71,7 @@ def readFileToMat(path):
 	#FLOAT THREE CHANNELS
 	elif arrayType == cv2.CV_32FC3:
 		mat = np.zeros((matHeight, matWidth), dtype = np.float32);
-		print "Reading CV_32FC3 image"
+		print("Reading CV_32FC3 image")
 		for i in range(matHeight):
 			for j in range(matWidth):
 				val = struct.unpack('f', fo.read(sz_float))[0]
@@ -70,13 +79,13 @@ def readFileToMat(path):
 	#DOUBLE THREE CHANNELS
 	elif arrayType == cv2.CV_64FC3:
 		mat = np.zeros((matHeight, matWidth), dtype = np.float64)
-		print "Reading CV_64FC3 image"
+		print("Reading CV_64FC3 image")
 		for i in range(matHeight):
 			for j in range(matWidth):
 				val = struct.unpack('d', fo.read(sz_double))[0]
 				mat[i,j] = val
 	else:
-		print "Error: wrong Mat type: must be CV_32F, CV_64F, CV_32FC3 or CV_64FC3"
+		print("Error: wrong Mat type: must be CV_32F, CV_64F, CV_32FC3 or CV_64FC3")
 
 	fo.close()
 	return mat
