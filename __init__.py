@@ -12,7 +12,7 @@ def readFlo(path):
 
 	import struct 
 	#Read binary .flo file, saved using flowIO::WriteFlowFile()
-	fo = open(path, 'rw+')
+	fo = open(path, 'rb')
 	tag = struct.unpack('f', fo.read(sz_float))[0]
 	if tag != TAG_FLOAT:
 		print("TAG_FLOAT (202021.25) doesn't match file. Is this a .flo file?")
@@ -31,7 +31,7 @@ def readFlo(path):
 	#Check for EOF
 	a = fo.read()
 	if a != '':
-		print("File longer than expected. Check format")
+		print("File longer than expected. Check format. Read file but proceed with caution")
 
 	fo.close()
 	return flo
